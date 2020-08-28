@@ -107,6 +107,14 @@ class chisel3CrossModule(crossVersionValue: String) extends CommonModule with Pu
 
   override def moduleDeps = super.moduleDeps ++ Seq(macros, core) ++ firrtlModule
 
+  override def scalacPluginClasspath = super.scalacPluginClasspath() ++ Agg(
+    plugin.jar()
+  )
+
+  override def scalacOptions  = super.scalacOptions() ++ Seq(
+    s"-Xplugin:${plugin.jar().path}"
+  )
+
   object test extends Tests {
     private def ivyCrossDeps = majorVersion match {
       case i if i < 12 => Agg(ivy"junit:junit:4.13")
@@ -168,6 +176,21 @@ class chisel3CrossModule(crossVersionValue: String) extends CommonModule with Pu
     }
 
   }
+
+  object plugin extends CommonModule {
+    override def crossVersion = crossVersionValue
+
+    def ivyDeps = Agg(
+      ivy"org.scala-lang:scala-library:${crossVersionValue}"
+    )
+
+    def scalacOptions = Seq(
+      "-Xfatal-warnings"
+    )
+
+    def artifactName = "chisel3-plugin"
+  }
+
   // make mill publish sbt compatible package
   def artifactName = "chisel3"
 }
